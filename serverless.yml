@@ -1,0 +1,46 @@
+service: # where we define metadata about our service
+  name: auction-service # v important cos it will be present in deployment phase
+
+plugins: #
+  - serverless-bundle #allows us bundle our app with web pack
+  - serverless-pseudo-parameters # allows us interpolate aws parameter e.g region
+
+provider: # where you tell sls framework info about your cloud provider
+  name: aws
+  runtime: nodejs12.x
+  memorySize: 256 #amount of memory our lambds function will get when excecuted, help optimize cost
+  stage: ${opt:stage, 'dev'} # dev, prod, staging e.t.c (if stage is not defined use )
+  region: eu-west-1
+  
+resources:
+  Resources:
+    AuctionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: AuctionsTable
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+            
+functions: #where we define our function
+  hello: # function name
+    handler: src/handlers/hello.handler # code that will be excecuted when the function is run
+    events: # thrigers the function
+      - http: #http event
+          method: GET
+          path: /hello
+  
+  createAuction: 
+    handler: src/handlers/createAuction.handler 
+    events: 
+      - http: 
+          method: POST
+          path: /createAuction
+
+custom:
+  bundle:
+    linting: false
